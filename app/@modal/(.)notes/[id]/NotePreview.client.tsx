@@ -1,87 +1,106 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchNoteById } from "@/lib/api";
-import css from "./NotePreview.module.css";
+import { useDebouncedCallback } from "use-debounce";
+import { useSearchParams, useRouter, useParams } from "next/navigation";
+import Link from "next/link";
+import { keepPreviousData } from "@tanstack/react-query";
+import { fetchNotes } from "@/lib/api";
+import NoteList from "@/components/NoteList/NoteList";
+import SearchBox from "@/components/SearchBox/SearchBox";
+import Pagination from "@/components/Pagination/Pagination";
+import css from "./page.module.css";
 
-type NotePreviewProps = {
-  noteId: string;
-};
-
-export default function NotePreview({ noteId }: NotePreviewProps) {
+export default function NotesClient() {
+  const searchParams = useSearchParams();
   const router = useRouter();
+  const params = useParams();
 
-  const {
-    data: note,
-    isLoading,
-    isError,
-    refetch,
-  } = useQuery({
-    queryKey: ["note", noteId],
-    queryFn: () => fetchNoteById(noteId),
-    refetchOnMount: false,
+  const currentTag = params.slug?.[0] || "all";
+  const initialPage = Number(searchParams.get("page")) || 1;
+  const initialSearch = searchParams.get("search") || "";
+
+  const [page, setPage] = useState(initialPage);
+  const [search, setSearch] = useState(initialSearch);
+
+  const updateURL = (newPage: number, newSearch: string) => {
+    const params = new URLSearchParams();
+    if (newPage > 1) params.set("page", newPage.toString());
+    if (newSearch) params.set("search", newSearch);
+
+    const basePath = `/notes/filter/${currentTag}`;
+    const queryString = params.toString();
+    const url = queryString ? `${basePath}?${queryString}` : basePath;
+
+    router.push(url, { scroll: false });
+  };
+
+  const handleClearSearch = () => {
+    setSearch("");
+    updateURL(1, "");
+  };
+
+  const debouncedSearchChange = useDebouncedCallback((value: string) => {
+    setSearch(value);
+    updateURL(1, value);
+  }, 300);
+
+  useEffect(() => {
+    setPage(initialPage);
+  }, [initialPage]);
+
+  const { data, isLoading, isError, error, isSuccess } = useQuery({
+    queryKey: ["notes", page, search, currentTag],
+    queryFn: () =>
+      fetchNotes(
+        page,
+        search,
+        12,
+        currentTag === "all" ? undefined : currentTag
+      ),
+    placeholderData: keepPreviousData,
   });
 
-  const handleClose = () => {
-    router.back();
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    updateURL(newPage, search);
   };
-
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      handleClose();
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className={css.overlay} onClick={handleClose}>
-        <div className={css.modal}>
-          <div className={css.loader}>Loading note...</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (isError || !note) {
-    return (
-      <div className={css.overlay} onClick={handleClose}>
-        <div className={css.modal}>
-          <div className={css.error}>
-            <p>Failed to load note details.</p>
-            <button className={css.retryBtn} onClick={() => refetch()}>
-              Try again
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className={css.overlay} onClick={handleOverlayClick}>
-      <div className={css.modal}>
-        <button className={css.closeButton} onClick={handleClose}>
-          ✕
-        </button>
-
-        <div className={css.item}>
-          <div className={css.header}>
-            <h2>{note.title}</h2>
-            <span className={css.date}>
-              {new Date(note.createdAt).toLocaleDateString()}
-            </span>
-          </div>
-
-          <div className={css.content}>{note.content}</div>
-
-          {note.tag && (
-            <div>
-              <span className={css.tag}>{note.tag}</span>
-            </div>
-          )}
+    <div className={css.container}>
+      <header className={css.toolbar}>
+        <div style={{ flex: 1, maxWidth: "400px" }}>
+          <SearchBox
+            value={search}
+            onChange={debouncedSearchChange}
+            onClear={handleClearSearch}
+          />
         </div>
-      </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          {isSuccess && data && data.totalPages > 1 && (
+            <Pagination
+              currentPage={page}
+              totalPages={data.totalPages}
+              onPageChange={handlePageChange}
+            />
+          )}
+
+          <Link href="/notes/action/create" className={css.addButton}>
+            + Create Note
+          </Link>
+        </div>
+      </header>
+
+      {isLoading && <p>Loading, please wait...</p>}
+      {isError && (
+        <div className={css.error}>
+          Error: {error?.message || "Something went wrong"}
+        </div>
+      )}
+
+      {isSuccess && data && <NoteList notes={data.notes} />}
     </div>
   );
 }

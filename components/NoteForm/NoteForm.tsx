@@ -1,99 +1,121 @@
 "use client";
 
-import css from "./NoteForm.module.css";
-import { Formik, Form, ErrorMessage, Field } from "formik";
-import type { FormikHelpers } from "formik";
-import * as Yup from "yup";
+import { useRouter } from "next/navigation";
 import { createNote } from "@/lib/api";
+import { useDraftNote } from "@/lib/store/noteStore";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import css from "./NoteForm.module.css";
 import type { CreateNoteRequest } from "@/types/note";
 
-interface NoteFormProps {
-  onClose: () => void;
-}
-
-const initialValues: CreateNoteRequest = {
-  title: "",
-  content: "",
-  tag: "Todo",
-};
-
-export default function NoteForm({ onClose }: NoteFormProps) {
+export default function NoteForm() {
+  const router = useRouter();
   const queryClient = useQueryClient();
+  const { draft, setDraft, clearDraft } = useDraftNote();
 
   const createMutation = useMutation({
     mutationFn: (values: CreateNoteRequest) => createNote(values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
-      onClose();
+      clearDraft();
+      router.back();
     },
   });
 
-  const handleSubmit = (
-    values: CreateNoteRequest,
-    actions: FormikHelpers<CreateNoteRequest>
-  ) => {
-    createMutation.mutate(values);
-    actions.resetForm();
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!draft.title || draft.title.length < 3) {
+      alert("Title must be at least 3 characters");
+      return;
+    }
+
+    if (draft.title.length > 50) {
+      alert("Title is too long");
+      return;
+    }
+
+    if (draft.content && draft.content.length > 500) {
+      alert("Content is too long");
+      return;
+    }
+
+    createMutation.mutate({
+      title: draft.title,
+      content: draft.content || "",
+      tag: draft.tag || "Todo",
+    });
   };
 
-  const OrderFormSchema = Yup.object().shape({
-    title: Yup.string()
-      .min(3, "Title must be at least 3 characters")
-      .max(50, "Title is too long")
-      .required("Title is required"),
-    content: Yup.string().max(500, "Content is too long"),
-    tag: Yup.string()
-      .oneOf(["Todo", "Work", "Personal", "Meeting", "Shopping"], "Invalid tag")
-      .required("Tag is required"),
-  });
+  const handleCancel = () => {
+    router.back();
+  };
 
   return (
-    <Formik
-      initialValues={initialValues}
-      onSubmit={handleSubmit}
-      validationSchema={OrderFormSchema}
-    >
-      <Form className={css.form}>
-        <div className={css.formGroup}>
-          <label htmlFor="title">Title</label>
-          <Field id="title" name="title" type="text" className={css.input} />
-          <ErrorMessage name="title" component="span" className={css.error} />
-        </div>
+    <form onSubmit={handleSubmit} className={css.form}>
+      <div className={css.formGroup}>
+        <label htmlFor="title">Title</label>
+        <input
+          id="title"
+          name="title"
+          type="text"
+          className={css.input}
+          value={draft.title || ""}
+          onChange={(e) => setDraft({ title: e.target.value })}
+          required
+          minLength={3}
+          maxLength={50}
+        />
+        {createMutation.isError && (
+          <span className={css.error}>Failed to create note</span>
+        )}
+      </div>
 
-        <div className={css.formGroup}>
-          <label htmlFor="content">Content</label>
-          <Field
-            as="textarea"
-            id="content"
-            name="content"
-            rows={8}
-            className={css.textarea}
-          />
-          <ErrorMessage name="content" component="span" className={css.error} />
-        </div>
+      <div className={css.formGroup}>
+        <label htmlFor="content">Content</label>
+        <textarea
+          id="content"
+          name="content"
+          rows={8}
+          className={css.textarea}
+          value={draft.content || ""}
+          onChange={(e) => setDraft({ content: e.target.value })}
+          maxLength={500}
+        />
+      </div>
 
-        <div className={css.formGroup}>
-          <label htmlFor="tag">Tag</label>
-          <Field as="select" id="tag" name="tag" className={css.select}>
-            <option value="Todo">Todo</option>
-            <option value="Work">Work</option>
-            <option value="Personal">Personal</option>
-            <option value="Meeting">Meeting</option>
-            <option value="Shopping">Shopping</option>
-          </Field>
-          <ErrorMessage name="tag" component="span" className={css.error} />
-        </div>
+      <div className={css.formGroup}>
+        <label htmlFor="tag">Tag</label>
+        <select
+          id="tag"
+          name="tag"
+          className={css.select}
+          value={draft.tag || "Todo"}
+          onChange={(e) => setDraft({ tag: e.target.value as any })}
+        >
+          <option value="Todo">Todo</option>
+          <option value="Work">Work</option>
+          <option value="Personal">Personal</option>
+          <option value="Meeting">Meeting</option>
+          <option value="Shopping">Shopping</option>
+        </select>
+      </div>
 
-        <div className={css.actions}>
-          <button type="button" className={css.cancelButton} onClick={onClose}>
-            Cancel
-          </button>
-          <button type="submit" className={css.submitButton}>
-            Create note
-          </button>
-        </div>
-      </Form>
-    </Formik>
+      <div className={css.actions}>
+        <button
+          type="button"
+          className={css.cancelButton}
+          onClick={handleCancel}
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className={css.submitButton}
+          disabled={createMutation.isPending}
+        >
+          {createMutation.isPending ? "Creating..." : "Create note"}
+        </button>
+      </div>
+    </form>
   );
 }
