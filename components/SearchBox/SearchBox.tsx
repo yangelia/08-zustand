@@ -23,7 +23,7 @@ const SearchBox = ({
         placeholder="Search notes..."
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        onKeyPress={onKeyPress}
+        onKeyDown={onKeyPress}
       />
       {value && onClear && (
         <button className={css.clearButton} onClick={onClear} type="button">

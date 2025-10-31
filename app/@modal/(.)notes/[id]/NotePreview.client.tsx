@@ -10,7 +10,7 @@ import { fetchNotes } from "@/lib/api";
 import NoteList from "@/components/NoteList/NoteList";
 import SearchBox from "@/components/SearchBox/SearchBox";
 import Pagination from "@/components/Pagination/Pagination";
-import css from "./page.module.css";
+import css from "./NotePreview.module.css";
 
 export default function NotesClient() {
   const searchParams = useSearchParams();

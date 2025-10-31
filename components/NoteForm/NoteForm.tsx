@@ -5,9 +5,9 @@ import { createNote } from "@/lib/api";
 import { useDraftNote } from "@/lib/Store/noteStore";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import css from "./NoteForm.module.css";
-import type { CreateNoteRequest, Tag } from "@/types/note";
+import type { CreateNoteRequest, NoteTag } from "@/types/note";
 
-export default function NoteForm() {
+export default function NoteForm({ onClose }: { onClose?: () => void }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { draft, setDraft, clearDraft } = useDraftNote();
@@ -17,7 +17,12 @@ export default function NoteForm() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
       clearDraft();
-      router.back();
+      // Если форму открыли в модалке — закрываем модалку, иначе возвращаемся назад
+      if (onClose) {
+        onClose();
+      } else {
+        router.back();
+      }
     },
   });
 
@@ -47,7 +52,11 @@ export default function NoteForm() {
   };
 
   const handleCancel = () => {
-    router.back();
+    if (onClose) {
+      onClose();
+    } else {
+      router.back();
+    }
   };
 
   return (
@@ -90,7 +99,7 @@ export default function NoteForm() {
           name="tag"
           className={css.select}
           value={draft.tag || "Todo"}
-          onChange={(e) => setDraft({ tag: e.target.value as Tag })}
+          onChange={(e) => setDraft({ tag: e.target.value as NoteTag })}
         >
           <option value="Todo">Todo</option>
           <option value="Work">Work</option>
