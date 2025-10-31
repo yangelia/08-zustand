@@ -2,10 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { createNote } from "@/lib/api";
-import { useDraftNote } from "@/lib/store/noteStore";
+import { useDraftNote } from "@/lib/Store/noteStore";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import css from "./NoteForm.module.css";
-import type { CreateNoteRequest } from "@/types/note";
+import type { CreateNoteRequest, Tag } from "@/types/note";
 
 export default function NoteForm() {
   const router = useRouter();
@@ -90,7 +90,7 @@ export default function NoteForm() {
           name="tag"
           className={css.select}
           value={draft.tag || "Todo"}
-          onChange={(e) => setDraft({ tag: e.target.value as any })}
+          onChange={(e) => setDraft({ tag: e.target.value as Tag })}
         >
           <option value="Todo">Todo</option>
           <option value="Work">Work</option>
