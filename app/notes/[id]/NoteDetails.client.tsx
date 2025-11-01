@@ -1,11 +1,12 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { fetchNoteById } from "@/lib/api";
 import css from "./NoteDetails.module.css";
 
 export default function NoteDetailsClient() {
+  const router = useRouter();
   const { id } = useParams();
   const {
     data: note,
@@ -25,11 +26,25 @@ export default function NoteDetailsClient() {
       <div className={css.item}>
         <div className={css.header}>
           <h2>{note.title}</h2>
+
+          {/* 🔽 Кнопка закрытия */}
+          <button
+            className={css.closeButton}
+            onClick={() => router.back()}
+            aria-label="Close"
+          >
+            ×
+          </button>
         </div>
+
         <p className={css.content}>{note.content}</p>
-        <p className={css.date}>
-          {new Date(note.createdAt).toLocaleDateString()}
-        </p>
+
+        <div className={css.footer}>
+          <span className={css.date}>
+            {new Date(note.createdAt).toLocaleDateString()}
+          </span>
+          <span className={css.tag}>{note.tag}</span>
+        </div>
       </div>
     </div>
   );

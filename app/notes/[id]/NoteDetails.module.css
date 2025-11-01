@@ -54,3 +54,18 @@
   border: 1px solid #b6d4fe;
   border-radius: 12px;
 }
+
+.closeButton {
+  background: transparent;
+  border: none;
+  font-size: 26px;
+  color: #777;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 6px;
+  transition: color 0.2s ease;
+}
+
+.closeButton:hover {
+  color: #000;
+}
