@@ -3,7 +3,6 @@
 import css from "./Modal.module.css";
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
-import { useRouter } from "next/navigation";
 
 interface ModalProps {
   onClose: () => void;
@@ -11,8 +10,6 @@ interface ModalProps {
 }
 
 export default function Modal({ onClose, children }: ModalProps) {
-  const router = useRouter();
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -38,6 +35,14 @@ export default function Modal({ onClose, children }: ModalProps) {
   return createPortal(
     <div className={css.backdrop} onClick={handleBackdropClick}>
       <div className={css.modal} onClick={(e) => e.stopPropagation()}>
+        <button
+          className={css.closeButton}
+          onClick={onClose}
+          aria-label="Close"
+        >
+          ×
+        </button>
+
         {children}
       </div>
     </div>,
