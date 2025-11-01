@@ -1,44 +1,45 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { NoteTag } from "@/types/note";
+import { useState, useRef, useEffect } from "react";
 import css from "./TagsMenu.module.css";
 
-const TagsMenu = () => {
-  const [open, setOpen] = useState(false);
+const tags = ["All", "Work", "Personal", "Shopping", "Meeting"];
+
+export default function TagsMenu() {
+  const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const tags: NoteTag[] = ["Todo", "Work", "Personal", "Meeting", "Shopping"];
+
+  const toggleMenu = () => {
+    setIsOpen((prev) => !prev);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setOpen(false);
+        setIsOpen(false);
       }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
-    <div ref={menuRef} className={css.menuContainer}>
-      <button
-        className={css.menuButton}
-        onClick={() => setOpen((prev) => !prev)}
-      >
+    <div className={css.menuContainer} ref={menuRef}>
+      <button className={css.menuButton} onClick={toggleMenu}>
         Notes ▾
       </button>
 
-      {open && (
+      {isOpen && (
         <ul className={css.menuList}>
-          <li className={css.menuItem}>
-            <Link href="/notes/filter/all" className={css.menuLink}>
-              All Notes
-            </Link>
-          </li>
-          {tags.map((tag, index) => (
-            <li key={index} className={css.menuItem}>
-              <Link href={`/notes/filter/${tag}`} className={css.menuLink}>
+          {tags.map((tag) => (
+            <li key={tag} className={css.menuItem}>
+              <Link
+                href={`/notes/filter/${tag}`}
+                className={css.menuLink}
+                onClick={() => setIsOpen(false)}
+              >
                 {tag}
               </Link>
             </li>
@@ -47,6 +48,4 @@ const TagsMenu = () => {
       )}
     </div>
   );
-};
-
-export default TagsMenu;
+}

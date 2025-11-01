@@ -1,6 +1,6 @@
-import css from "./Header.module.css";
 import Link from "next/link";
-import TagsMenu from "@/components/TagsMenu/TagsMenu";
+import css from "./Header.module.css";
+import TagsMenu from "../TagsMenu/TagsMenu";
 
 export default function Header() {
   return (
