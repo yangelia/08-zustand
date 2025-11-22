@@ -1,3 +1,4 @@
+// components/NoteForm/NoteForm.tsx
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -69,7 +70,12 @@ export default function NoteForm({ onClose }: { onClose?: () => void }) {
           type="text"
           className={css.input}
           value={draft.title || ""}
-          onChange={(e) => setDraft({ title: e.target.value })}
+          onChange={(e) =>
+            setDraft({
+              ...draft,
+              title: e.target.value,
+            })
+          }
           required
           minLength={3}
           maxLength={50}
@@ -87,7 +93,12 @@ export default function NoteForm({ onClose }: { onClose?: () => void }) {
           rows={8}
           className={css.textarea}
           value={draft.content || ""}
-          onChange={(e) => setDraft({ content: e.target.value })}
+          onChange={(e) =>
+            setDraft({
+              ...draft,
+              content: e.target.value,
+            })
+          }
           maxLength={500}
         />
       </div>
@@ -99,7 +110,12 @@ export default function NoteForm({ onClose }: { onClose?: () => void }) {
           name="tag"
           className={css.select}
           value={draft.tag || "Todo"}
-          onChange={(e) => setDraft({ tag: e.target.value as NoteTag })}
+          onChange={(e) =>
+            setDraft({
+              ...draft,
+              tag: e.target.value as NoteTag,
+            })
+          }
         >
           <option value="Todo">Todo</option>
           <option value="Work">Work</option>

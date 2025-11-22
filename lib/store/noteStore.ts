@@ -1,4 +1,5 @@
-import { DraftNote } from "@/types/note";
+// lib/store/noteStore.ts
+import type { DraftNote } from "@/types/note";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -10,7 +11,7 @@ const initialDraft: DraftNote = {
 
 interface DraftNoteStore {
   draft: DraftNote;
-  setDraft: (partial: Partial<DraftNote>) => void;
+  setDraft: (draft: DraftNote) => void;
   clearDraft: () => void;
 }
 
@@ -18,8 +19,7 @@ export const useDraftNote = create<DraftNoteStore>()(
   persist(
     (set) => ({
       draft: { ...initialDraft },
-      setDraft: (partialDraft: Partial<DraftNote>) =>
-        set((state) => ({ draft: { ...state.draft, ...partialDraft } })),
+      setDraft: (newDraft: DraftNote) => set({ draft: newDraft }),
       clearDraft: () => set({ draft: { ...initialDraft } }),
     }),
     {

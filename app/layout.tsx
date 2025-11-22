@@ -2,6 +2,7 @@ import TanStackProvider from "@/components/TanStackProvider/TanStackProvider";
 import Header from "@/components/Header/Header";
 import Footer from "@/components/Footer/Footer";
 import { Roboto } from "next/font/google";
+import type { Metadata } from "next"; // 👈 добавили тип
 import "./globals.css";
 
 const roboto = Roboto({
@@ -11,7 +12,7 @@ const roboto = Roboto({
   variable: "--font-roboto",
 });
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "NoteHub - Your Personal Note Taking App",
   description:
     "Organize your thoughts, ideas, and tasks with NoteHub. Create, filter, and manage your notes efficiently.",
